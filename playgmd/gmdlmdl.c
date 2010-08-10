@@ -154,25 +154,7 @@ static int _mpLoadMDL(struct gmdmodule *m, FILE *file)
 	unsigned int maxins;
 	unsigned int smpnum;
 
-	void FreeResources(void)
-	{
-		int j;
-		if (msmps)
-		{
-			for (j=0; j<255; j++)
-			{
-				if (msmps[j])
-					free(msmps[j]);
-			}
-			free(msmps);
-			msmps=0;
-		}
-		if (inssampnum)
-		{
-			free(inssampnum);
-			inssampnum=0;
-		}
-	}
+    int frj;
 
       	mpReset(m);
 
@@ -823,7 +805,23 @@ static int _mpLoadMDL(struct gmdmodule *m, FILE *file)
 /*  int *insenvnum=new int [255]; */
 	if (/*!envs||!insenvnum||*/!inssampnum||!msmps||!mpAllocInstruments(m, m->instnum))
 	{
-		FreeResources();
+		{
+    		if (msmps)
+    		{
+    			for (frj=0; frj<255; frj++)
+    			{
+    				if (msmps[frj])
+    					free(msmps[frj]);
+    			}
+    			free(msmps);
+    			msmps=0;
+    		}
+    		if (inssampnum)
+    		{
+    			free(inssampnum);
+    			inssampnum=0;
+    		}
+    	}
 		return errAllocMem;
 	}
 
@@ -842,7 +840,23 @@ static int _mpLoadMDL(struct gmdmodule *m, FILE *file)
 		if (fread(&insnum, sizeof(uint8_t), 1, file) != 1)
 		{
 			fprintf(stderr, __FILE__ ": fread() failed #24\n");
-			FreeResources();
+			{
+        		if (msmps)
+        		{
+        			for (frj=0; frj<255; frj++)
+        			{
+        				if (msmps[frj])
+        					free(msmps[frj]);
+        			}
+        			free(msmps);
+        			msmps=0;
+        		}
+        		if (inssampnum)
+        		{
+        			free(inssampnum);
+        			inssampnum=0;
+        		}
+        	}
 			return errFormStruc;
 		}
 		insnum--;
@@ -852,13 +866,45 @@ static int _mpLoadMDL(struct gmdmodule *m, FILE *file)
 		if (fread(&inssampnum[j], sizeof(uint8_t), 1, file) != 1)
 		{
 			fprintf(stderr, __FILE__ ": fread() failed #25\n");
-			FreeResources();
+			{
+        		if (msmps)
+        		{
+        			for (frj=0; frj<255; frj++)
+        			{
+        				if (msmps[frj])
+        					free(msmps[frj]);
+        			}
+        			free(msmps);
+        			msmps=0;
+        		}
+        		if (inssampnum)
+        		{
+        			free(inssampnum);
+        			inssampnum=0;
+        		}
+        	}
 			return errFormStruc;
 		}
 		if (fread(ip->name, 32, 1, file) != 1)
 		{
 			fprintf(stderr, __FILE__ ": fread() failed #26\n");
-			FreeResources();
+			{
+        		if (msmps)
+        		{
+        			for (frj=0; frj<255; frj++)
+        			{
+        				if (msmps[frj])
+        					free(msmps[frj]);
+        			}
+        			free(msmps);
+        			msmps=0;
+        		}
+        		if (inssampnum)
+        		{
+        			free(inssampnum);
+        			inssampnum=0;
+        		}
+        	}
 			return errFormStruc;
 		}
 		ip->name[31]=0;
@@ -866,7 +912,23 @@ static int _mpLoadMDL(struct gmdmodule *m, FILE *file)
 /*    envs[insnum]=new envelope [inssampnum[j]]; */
 	    	if (!msmps[j]/*||!envs[insnum]*/)
 		{
-			FreeResources();
+			{
+        		if (msmps)
+        		{
+        			for (frj=0; frj<255; frj++)
+        			{
+        				if (msmps[frj])
+        					free(msmps[frj]);
+        			}
+        			free(msmps);
+        			msmps=0;
+        		}
+        		if (inssampnum)
+        		{
+        			free(inssampnum);
+        			inssampnum=0;
+        		}
+        	}
 			return errAllocMem;
 		}
 
@@ -894,7 +956,23 @@ static int _mpLoadMDL(struct gmdmodule *m, FILE *file)
 			if (fread(&mdlmsmp, sizeof(mdlmsmp), 1, file) != 1)
 			{
 				fprintf(stderr, __FILE__ ": fread() failed #27\n");
-				FreeResources();
+				{
+            		if (msmps)
+            		{
+            			for (frj=0; frj<255; frj++)
+            			{
+            				if (msmps[frj])
+            					free(msmps[frj]);
+            			}
+            			free(msmps);
+            			msmps=0;
+            		}
+            		if (inssampnum)
+            		{
+            			free(inssampnum);
+            			inssampnum=0;
+            		}
+            	}
 				return errFormStruc;
 			}
 			mdlmsmp.fadeout = uint16_little (mdlmsmp.fadeout);
@@ -976,7 +1054,23 @@ static int _mpLoadMDL(struct gmdmodule *m, FILE *file)
  *      memcpy(&m.envelopes[envnum++], &envs[j][i], sizeof (*m.envelopes));*/
 /*    delete envs[j]; */
 	}
-	FreeResources();
+	{
+		if (msmps)
+		{
+			for (frj=0; frj<255; frj++)
+			{
+				if (msmps[frj])
+					free(msmps[frj]);
+			}
+			free(msmps);
+			msmps=0;
+		}
+		if (inssampnum)
+		{
+			free(inssampnum);
+			inssampnum=0;
+		}
+	}
 /*  delete envs;*/
 /*  delete insenvnum;*/
 

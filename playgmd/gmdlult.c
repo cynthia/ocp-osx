@@ -62,14 +62,7 @@ static int _mpLoadULT(struct gmdmodule *m, FILE *file)
 	uint8_t *chcurcmd[32];
 	uint8_t chrepn[32];
 
-	int safeout(int err)
-	{
-		if (buffer)
-			free(buffer);
-		if (temptrack)
-			free(temptrack);
-		return err;
-	}
+    int safeout_err = 0;
 
 	mpReset(m);
 
@@ -250,7 +243,10 @@ static int _mpLoadULT(struct gmdmodule *m, FILE *file)
 	temptrack=malloc(sizeof(uint8_t)*2000);
 	buffer=malloc(sizeof(uint8_t)*patlength);
 	if (!buffer||!temptrack)
-		return safeout(errAllocMem);
+	{
+        safeout_err = errAllocMem;
+        goto SAFEOUT;
+	}
 
 	if (fread(buffer, patlength, 1, file) != 1)
 		fprintf(stderr, __FILE__ ": warning, read failed #6\n");
@@ -305,7 +301,8 @@ static int _mpLoadULT(struct gmdmodule *m, FILE *file)
 				if (!curcmd)
 				{
 					fprintf(stderr, "playgmd: gmdlult.c: curcmd==NULL\n");
-					return safeout(errFormStruc);
+                    safeout_err = errFormStruc;
+                    goto SAFEOUT;
 				}
 				ins=(int16_t)curcmd[1]-1;
 				nte=curcmd[0]?(curcmd[0]+35):-1;
@@ -563,6 +560,17 @@ static int _mpLoadULT(struct gmdmodule *m, FILE *file)
 		if (fread(sip->ptr, l, 1, file) != 1)
 			fprintf(stderr, __FILE__ ": warning, read failed #6\n");
 	}
+
+SAFEOUT:
+    if (safeout_err != 0)
+    {
+        if (buffer)
+			free(buffer);
+		if (temptrack)
+			free(temptrack);
+
+        return safeout_err;
+    }
 
 	return errOk;
 }

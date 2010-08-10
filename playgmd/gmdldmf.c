@@ -172,18 +172,7 @@ static int _mpLoadDMF(struct gmdmodule *m, FILE *file)
 
 	uint8_t smppack[256];
 
-	int safeout(int err)
-	{
-		if (orders)
-			free(orders);
-		if (patbuf)
-			free(patbuf);
-		if (patadr)
-			free(patadr);
-		if (temptrack)
-			free(temptrack);
-		return err;
-	}
+    int safeout_err = 0;
 
 	mpReset(m);
 
@@ -292,7 +281,10 @@ static int _mpLoadDMF(struct gmdmodule *m, FILE *file)
 	next = uint32_little (next);
 
 	if (memcmp(sig, "PATT", 4))
-		return safeout(errFormStruc);
+	{
+        safeout_err = errFormStruc;
+        goto SAFEOUT;
+	}
 
 	if (fread(&patnum, sizeof(uint16_t), 1, file) != 1)
 		fprintf(stderr, __FILE__ ": warning, read failed #15\n");
@@ -305,7 +297,11 @@ static int _mpLoadDMF(struct gmdmodule *m, FILE *file)
 	patadr=malloc(sizeof(uint8_t *)*(patnum));
 	temptrack=malloc(sizeof(uint8_t)*(m->channum+1)*3000);
 	if (!patbuf||!patadr||!temptrack)
-		return safeout(errAllocMem);
+	{
+        safeout_err = errAllocMem;
+        goto SAFEOUT;	    
+	}
+
 	if (fread(patbuf, next-3, 1, file) != 1)
 		fprintf(stderr, __FILE__ ": warning, read failed #17\n");
 
@@ -345,7 +341,10 @@ static int _mpLoadDMF(struct gmdmodule *m, FILE *file)
 	m->tracknum=ordnum*(m->channum+1);
 
 	if (!mpAllocTracks(m, m->tracknum)||!mpAllocPatterns(m, m->patnum)||!mpAllocOrders(m, m->ordnum))
-		return safeout(errAllocMem);
+	{
+	    safeout_err = errAllocMem;
+        goto SAFEOUT;        
+	}
 
 	for (i=0; i<m->ordnum; i++)
 		m->orders[i]=i;
@@ -414,7 +413,9 @@ static int _mpLoadDMF(struct gmdmodule *m, FILE *file)
 					free(patbuf);
 					free(patadr);
 					free(temptrack);
-					return safeout(errFormStruc);
+					
+					safeout_err = errFormStruc;
+                    goto SAFEOUT;
 				}
 				info=*pp++;
 
@@ -634,7 +635,10 @@ static int _mpLoadDMF(struct gmdmodule *m, FILE *file)
 				trk->ptr=malloc(sizeof(uint8_t)*tlen);
 				trk->end=trk->ptr+tlen;
 				if (!trk->ptr)
-					return safeout(errAllocMem);
+				{
+				    safeout_err = errAllocMem;
+                    goto SAFEOUT;
+				}
 				memcpy(trk->ptr, temptrack[j], tlen);
 			}
 		}
@@ -650,7 +654,10 @@ static int _mpLoadDMF(struct gmdmodule *m, FILE *file)
 			trk->ptr=malloc(sizeof(uint8_t)*tlen);
 			trk->end=trk->ptr+tlen;
 			if (!trk->ptr)
-				return safeout(errAllocMem);
+			{
+			    safeout_err = errAllocMem;
+                goto SAFEOUT;
+			}
 			memcpy(trk->ptr, temptrack[m->channum], tlen);
 		}
 	}
@@ -798,6 +805,19 @@ static int _mpLoadDMF(struct gmdmodule *m, FILE *file)
 		
 		sip->ptr=smpp;
 	}
+
+SAFEOUT:
+    if (orders)             
+            free(orders);   
+    if (patbuf)             
+            free(patbuf);   
+    if (patadr)             
+            free(patadr);   
+    if (temptrack)          
+            free(temptrack);
+
+    if (safeout_err != 0)
+        return safeout_err;
 
 	return errOk;
 }

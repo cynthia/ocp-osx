@@ -51,14 +51,7 @@ static int _mpLoadPTM(struct gmdmodule *m, FILE *file)
 	uint8_t *buffer = 0;
 	uint8_t *temptrack = 0;
 
-	int safeout(int err)
-	{
-		if (buffer)
-			free(buffer);
-		if (temptrack)
-			free(temptrack);
-		return err;
-	}
+    int safeout_err = 0;
 
 	struct __attribute__((packed))
 	{
@@ -214,7 +207,10 @@ static int _mpLoadPTM(struct gmdmodule *m, FILE *file)
 	buffer=malloc(sizeof(uint8_t)*bufSize);
 	temptrack=malloc(sizeof(uint8_t)*2000);
 	if (!temptrack||!buffer)
-		return safeout(errAllocMem);
+	{
+        safeout_err = errAllocMem;
+        goto SAFEOUT;
+	}
 
 	for (t=0; t<hdr.pats; t++)
 	{
@@ -235,7 +231,10 @@ static int _mpLoadPTM(struct gmdmodule *m, FILE *file)
 			free(buffer);
 			buffer=malloc(sizeof(uint8_t)*bufSize);
 			if (!buffer)
-				return safeout(errAllocMem);
+			{
+                safeout_err = errAllocMem;
+                goto SAFEOUT;
+			}
 		}
 		if (fread(buffer, patSize, 1, file) != 1)
 			fprintf(stderr, __FILE__ ": warning, read failed #5\n");
@@ -512,7 +511,10 @@ static int _mpLoadPTM(struct gmdmodule *m, FILE *file)
 				trk->ptr=malloc(sizeof(uint8_t)*len);
 				trk->end=trk->ptr+len;
 				if (!trk->ptr)
-					return safeout(errAllocMem);
+				{
+                    safeout_err = errAllocMem;
+                    goto SAFEOUT;
+				}
 				memcpy(trk->ptr, temptrack, len);
 			}
 		}
@@ -611,7 +613,10 @@ static int _mpLoadPTM(struct gmdmodule *m, FILE *file)
 			trk->ptr=malloc(sizeof(uint8_t)*len);
 			trk->end=trk->ptr+len;
 			if (!trk->ptr)
-				return safeout(errAllocMem);
+			{
+                safeout_err = errAllocMem;
+                goto SAFEOUT;
+			}
 			memcpy(trk->ptr, temptrack, len);
 		}
 	}
@@ -644,6 +649,18 @@ static int _mpLoadPTM(struct gmdmodule *m, FILE *file)
 		for (j=0; j<slen; j++)
 			((unsigned char *)sip->ptr)[j]=x+=((unsigned char*)sip->ptr)[j];
 	}
+
+SAFEOUT:
+
+    if (safeout_err != 0)
+    {
+        if (buffer)
+    		free(buffer);
+    	if (temptrack)
+    		free(temptrack);
+
+        return safeout_err;
+    }
 
 	return errOk;
 }

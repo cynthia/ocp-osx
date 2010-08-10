@@ -64,16 +64,7 @@ static int _mpLoadMTM(struct gmdmodule *m, FILE *file)
 	uint8_t *tbuffer=0;
 	uint16_t (*trackseq)[32]=0;
 
-	int safeout(int err)
-	{
-		if (temptrack)
-			free(temptrack);
-		if (tbuffer)
-			free(tbuffer);
-		if (trackseq)
-			free(trackseq);
-		return err;
-	}
+    int safeout_err = 0;
 
 	mpReset(m);
 
@@ -177,7 +168,10 @@ static int _mpLoadMTM(struct gmdmodule *m, FILE *file)
 	tbuffer=malloc(sizeof(uint8_t)*(192*header.trknum+192));
 	trackseq=malloc(sizeof(uint16_t)*(header.patnum+1)*32);
 	if (!tbuffer||!temptrack||!trackseq)
-		return safeout(errAllocMem);
+	{
+        safeout_err = errAllocMem;
+        goto SAFEOUT;
+	}
 
 	memset(tbuffer, 0, 192);
 	if (fread(tbuffer+192, 192*header.trknum, 1, file) != 1)
@@ -397,7 +391,10 @@ static int _mpLoadMTM(struct gmdmodule *m, FILE *file)
 				trk->ptr=malloc(sizeof(uint8_t)*len);
 				trk->end=trk->ptr+len;
 				if (!trk->ptr)
-					return safeout(errAllocMem);
+				{
+                    safeout_err = errAllocMem;
+                    goto SAFEOUT;
+				}
 				memcpy(trk->ptr, temptrack, len);
 			}
 		}
@@ -465,7 +462,10 @@ static int _mpLoadMTM(struct gmdmodule *m, FILE *file)
 			trk->ptr=malloc(sizeof(uint8_t)*len);
 			trk->end=trk->ptr+len;
 			if (!trk->ptr)
-				return safeout(errAllocMem);
+			{
+                safeout_err = errAllocMem;
+                goto SAFEOUT;
+			}
 			memcpy(trk->ptr, temptrack, len);
 		}
 	}
@@ -518,6 +518,19 @@ static int _mpLoadMTM(struct gmdmodule *m, FILE *file)
 		if (fread(sip->ptr, l, 1, file) != 1)
 			fprintf(stderr, __FILE__ ": warning, read failed #7\n");
 	}
+
+SAFEOUT:
+    if (safeout_err != 0)
+    {
+        if (temptrack)
+			free(temptrack);
+		if (tbuffer)
+			free(tbuffer);
+		if (trackseq)
+			free(trackseq);
+		
+        return safeout_err;
+    }
 
 	return errOk;
 }

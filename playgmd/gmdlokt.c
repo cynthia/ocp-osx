@@ -58,14 +58,8 @@ static int _mpLoadOKT(struct gmdmodule *m, FILE *file)
 	struct gmdpattern *pp;
 	uint8_t *temptrack = 0;
 	uint8_t *buffer = 0;
-	int safeout(int err)
-	{
-		if (temptrack)
-			free(temptrack);
-		if (buffer)
-			free(buffer);
-		return err;
-	}
+
+    int safeout_err;
 
 	mpReset(m);
 
@@ -371,8 +365,11 @@ static int _mpLoadOKT(struct gmdmodule *m, FILE *file)
 	temptrack=malloc(sizeof(uint8_t)*3000);
 	buffer=malloc(sizeof(uint8_t)*(1024*m->channum));
 	if (!buffer||!temptrack)
-		return safeout(errAllocMem);
-
+	{
+        safeout_err = errAllocMem;
+        goto SAFEOUT;
+    }
+    
 	for (t=0; t<pn; t++)
 	{
 		uint16_t patlen;
@@ -386,7 +383,8 @@ static int _mpLoadOKT(struct gmdmodule *m, FILE *file)
 		if (fread(&chunk, sizeof(chunk), 1, file) != 1)
 		{
 			fprintf(stderr, __FILE__ ": read failed #20\n");
-			return safeout(errFormStruc);
+            safeout_err = errFormStruc;
+            goto SAFEOUT;
 		}
 #ifdef OKT_LOAD_DEBUG
 		fprintf(stderr, __FILE__ ": comparing header \"%c%c%c%c\" against \"PBOD\"\n", chunk.sig[0], chunk.sig[1], chunk.sig[2], chunk.sig[3]);
@@ -394,7 +392,8 @@ static int _mpLoadOKT(struct gmdmodule *m, FILE *file)
 		if (memcmp(chunk.sig, "PBOD", 4))
 		{
 			fprintf(stderr, __FILE__ ": header \"PBOD\" failed\n");
-			return safeout(errFormStruc);
+            safeout_err = errFormStruc;
+            goto SAFEOUT;
 		}
 		chunk.blen=uint32_big(chunk.blen);
 		if (fread(&patlen, sizeof(uint16_t), 1, file) != 1)
@@ -406,7 +405,8 @@ static int _mpLoadOKT(struct gmdmodule *m, FILE *file)
 		if ((chunk.blen!=(2+4*m->channum*patlen))||(patlen>256))
 		{
 			fprintf(stderr, __FILE__ ": invalid patlen: %d\n", (int)patlen);
-			return safeout(errFormStruc);
+            safeout_err = errFormStruc;
+            goto SAFEOUT;
 		}
 
 		for (q=0; q<m->patnum; q++)
@@ -416,7 +416,8 @@ static int _mpLoadOKT(struct gmdmodule *m, FILE *file)
 		if (fread(buffer, 4*m->channum*patlen, 1, file) != 1)
 		{
 			fprintf(stderr, __FILE__ ": read failed #23\n");
-			return safeout(errFormStruc);
+            safeout_err = errFormStruc;
+            goto SAFEOUT;
 		}
 		for (q=0; q<m->channum; q++)
 		{
@@ -522,7 +523,10 @@ static int _mpLoadOKT(struct gmdmodule *m, FILE *file)
 				trk->ptr=malloc(sizeof(uint8_t)*len);
 				trk->end=trk->ptr+len;
 				if (!trk->ptr)
-					return safeout(errAllocMem);
+				{
+                    safeout_err = errAllocMem;
+                    goto SAFEOUT;
+				}
 				memcpy(trk->ptr, temptrack, len);
 			}
 		}
@@ -570,7 +574,10 @@ static int _mpLoadOKT(struct gmdmodule *m, FILE *file)
 			trk->ptr=malloc(sizeof(uint8_t)*len);
 			trk->end=trk->ptr+len;
 			if (!trk->ptr)
-				return safeout(errAllocMem);
+			{
+                safeout_err = errAllocMem;
+                goto SAFEOUT;
+			}
 			memcpy(trk->ptr, temptrack, len);
 		}
 	}
@@ -612,6 +619,17 @@ static int _mpLoadOKT(struct gmdmodule *m, FILE *file)
 		if (sip->loopstart>=sip->loopend)
 			sip->type&=~mcpSampLoop;
 	}
+
+SAFEOUT:
+    if (safeout_err != 0)
+    {
+        if (temptrack)
+			free(temptrack);
+		if (buffer)
+			free(buffer);
+		
+        return safeout_err;
+    }
 
 	return errOk;
 }
