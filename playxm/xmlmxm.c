@@ -66,26 +66,6 @@ int __attribute__ ((visibility ("internal"))) xmpLoadMXM(struct xmodule *m, FILE
 
 	uint32_t guspos[128*16];
 
-	void cleanup_memory(void)
-	{
-		if (smps||msmps)
-			for (i=0; i<m->ninst; i++)
-			{
-				if (smps)
-					if (smps[i])
-						free(smps[i]);
-				if (msmps)
-					if (msmps[i])
-					free(msmps[i]);
-			}
-		if (smps)
-			free(smps);
-		if (msmps)
-			free(msmps);
-		if (instsmpnum)
-			free(instsmpnum);
-	}
-
 	m->envelopes=0;
 	m->samples=0;
 	m->instruments=0;
@@ -156,7 +136,24 @@ int __attribute__ ((visibility ("internal"))) xmpLoadMXM(struct xmodule *m, FILE
 
 	if (!smps||!msmps||!instsmpnum||!m->instruments||!m->envelopes||!m->patterns||!m->orders||!m->patlens)
 	{
-		cleanup_memory();
+		{
+		    if (smps||msmps)
+    			for (i=0; i<m->ninst; i++)
+    			{
+    				if (smps)
+    					if (smps[i])
+    						free(smps[i]);
+    				if (msmps)
+    					if (msmps[i])
+    					free(msmps[i]);
+    			}
+    		if (smps)
+    			free(smps);
+    		if (msmps)
+    			free(msmps);
+    		if (instsmpnum)
+    			free(instsmpnum);
+		}
 		return errAllocMem;
 	}
 
@@ -170,7 +167,25 @@ int __attribute__ ((visibility ("internal"))) xmpLoadMXM(struct xmodule *m, FILE
 	m->patterns[mxmhead.patnum]= calloc(sizeof(uint8_t)*64,mxmhead.channum*5);
 	if (!m->patterns[mxmhead.patnum])
 	{
-		cleanup_memory();
+		{
+		    if (smps||msmps)
+    			for (i=0; i<m->ninst; i++)
+    			{
+    				if (smps)
+    					if (smps[i])
+    						free(smps[i]);
+    				if (msmps)
+    					if (msmps[i])
+    					free(msmps[i]);
+    			}
+    		if (smps)
+    			free(smps);
+    		if (msmps)
+    			free(msmps);
+    		if (instsmpnum)
+    			free(instsmpnum);
+    		
+		}
 		return errAllocMem;
 	}
 
@@ -229,7 +244,25 @@ int __attribute__ ((visibility ("internal"))) xmpLoadMXM(struct xmodule *m, FILE
 
 		if (!smps[i]||!msmps[i])
 		{
-			cleanup_memory();
+			{
+			    if (smps||msmps)
+        			for (i=0; i<m->ninst; i++)
+        			{
+        				if (smps)
+        					if (smps[i])
+        						free(smps[i]);
+        				if (msmps)
+        					if (msmps[i])
+        					free(msmps[i]);
+        			}
+        		if (smps)
+        			free(smps);
+        		if (msmps)
+        			free(msmps);
+        		if (instsmpnum)
+        			free(instsmpnum);
+        		
+			}
 			return errAllocMem;
 		}
 
@@ -246,7 +279,25 @@ int __attribute__ ((visibility ("internal"))) xmpLoadMXM(struct xmodule *m, FILE
 		env[0].env=malloc(sizeof(uint8_t)*(el+1));
 		if (!env[0].env)
 		{
-			cleanup_memory();
+			{
+			    if (smps||msmps)
+        			for (i=0; i<m->ninst; i++)
+        			{
+        				if (smps)
+        					if (smps[i])
+        						free(smps[i]);
+        				if (msmps)
+        					if (msmps[i])
+        					free(msmps[i]);
+        			}
+        		if (smps)
+        			free(smps);
+        		if (msmps)
+        			free(msmps);
+        		if (instsmpnum)
+        			free(instsmpnum);
+        		
+			}
 			return errAllocMem;
 		}
 		h=mxmins.venv[0][1]*4;
@@ -288,7 +339,25 @@ int __attribute__ ((visibility ("internal"))) xmpLoadMXM(struct xmodule *m, FILE
 		env[1].env=malloc(sizeof(uint8_t)*(el+1));
 		if (!env[1].env)
 		{
-			cleanup_memory();
+			{
+			    if (smps||msmps)
+        			for (i=0; i<m->ninst; i++)
+        			{
+        				if (smps)
+        					if (smps[i])
+        						free(smps[i]);
+        				if (msmps)
+        					if (msmps[i])
+        					free(msmps[i]);
+        			}
+        		if (smps)
+        			free(smps);
+        		if (msmps)
+        			free(msmps);
+        		if (instsmpnum)
+        			free(instsmpnum);
+        		
+			}
 			return errAllocMem;
 		}
 		p=0;
@@ -408,7 +477,25 @@ int __attribute__ ((visibility ("internal"))) xmpLoadMXM(struct xmodule *m, FILE
 			sip->ptr=malloc(sizeof(uint8_t)*(l+528));
 			if (!sip->ptr)
 			{
-				cleanup_memory();
+				{
+				    if (smps||msmps)
+            			for (i=0; i<m->ninst; i++)
+            			{
+            				if (smps)
+            					if (smps[i])
+            						free(smps[i]);
+            				if (msmps)
+            					if (msmps[i])
+            					free(msmps[i]);
+            			}
+            		if (smps)
+            			free(smps);
+            		if (msmps)
+            			free(msmps);
+            		if (instsmpnum)
+            			free(instsmpnum);
+            		
+				}
 				return errAllocMem;
 			}
 			sp->handle=m->nsampi++;
@@ -422,7 +509,25 @@ int __attribute__ ((visibility ("internal"))) xmpLoadMXM(struct xmodule *m, FILE
 
 	if (!m->samples||!m->sampleinfos)
 	{
-		cleanup_memory();
+		{
+		    if (smps||msmps)
+    			for (i=0; i<m->ninst; i++)
+    			{
+    				if (smps)
+    					if (smps[i])
+    						free(smps[i]);
+    				if (msmps)
+    					if (msmps[i])
+    					free(msmps[i]);
+    			}
+    		if (smps)
+    			free(smps);
+    		if (msmps)
+    			free(msmps);
+    		if (instsmpnum)
+    			free(instsmpnum);
+    		
+		}
 		return errAllocMem;
 	}
 
